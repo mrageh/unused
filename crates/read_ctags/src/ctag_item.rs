@@ -33,6 +33,7 @@ impl Display for CtagItem {
 }
 
 /// A struct capturing possible failures when attempting to parse a tags file
+#[derive(Debug)]
 pub enum CtagsParseError {
     /// Incomplete parse; parsing was successful but didn't consume all input
     IncompleteParse,
@@ -61,5 +62,64 @@ impl CtagItem {
                 e.map(|(v1, v2)| (v1.to_string(), v2)),
             )),
         }
+    }
+
+    /// encode a `CtagItem` into its line representation within a tags file
+    pub fn encode(&self) -> String {
+        let tags = self
+            .tags
+            .iter()
+            .map(|(k, v)| format!("{}:{}", k, v))
+            .collect::<Vec<String>>()
+            .join("\t");
+
+        match (self.tags.len(), &self.kind) {
+            (0, TokenKind::Undefined) => {
+                format!("{}\t{}\t{}", self.name, self.file_path, self.address).to_string()
+            }
+            (_, TokenKind::Undefined) => format!(
+                "{}\t{}\t{};\"\t{}",
+                self.name, self.file_path, self.address, tags
+            )
+            .to_string(),
+            (0, kind) => format!(
+                "{}\t{}\t{};\"\t{}",
+                self.name,
+                self.file_path,
+                self.address,
+                kind.to_token_char(self.language)
+            )
+            .to_string(),
+            (_, kind) => format!(
+                "{}\t{}\t{};\"\t{}\t{}",
+                self.name,
+                self.file_path,
+                self.address,
+                kind.to_token_char(self.language),
+                tags
+            )
+            .to_string(),
+        }
+    }
+}
+
+#[test]
+fn bidirectional_encoding() {
+    let lines = vec![
+        "ClassMethod\tpath/to/file.rb\t2;\"\tS\tclass:File",
+        "ClassMethod\tpath/to/file.rb\t2;\"\tS\tclass:File\tmodule:Foobar",
+        "ClassMethod\tpath/to/file.rb\t2",
+        "ClassMethod\tpath/to/file.rb\t2;\"\tS",
+    ];
+
+    for line in lines {
+        assert_eq!(
+            line,
+            CtagItem::parse(line)
+                .unwrap()
+                .iter()
+                .collect::<Vec<&CtagItem>>()[0]
+                .encode()
+        );
     }
 }

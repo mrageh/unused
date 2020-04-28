@@ -1,4 +1,5 @@
 use serde::Serialize;
+use std::collections::HashSet;
 use std::path::Path;
 use std::str::FromStr;
 
@@ -60,6 +61,29 @@ impl Language {
             "css", "ex", "exs", "elm", "html", "json", "js", "jsx", "md", "py", "rb", "rs", "scss",
             "sh", "svg", "ts", "tsx", "xml",
         ]
+    }
+
+    /// All languages
+    pub fn all() -> HashSet<Language> {
+        vec![
+            Language::CSS,
+            Language::Elixir,
+            Language::Elm,
+            Language::HTML,
+            Language::JSON,
+            Language::JavaScript,
+            Language::Markdown,
+            Language::Ruby,
+            Language::Rust,
+            Language::SCSS,
+            Language::Sh,
+            Language::SVG,
+            Language::TypeScript,
+            Language::XML,
+        ]
+        .iter()
+        .cloned()
+        .collect()
     }
 }
 
